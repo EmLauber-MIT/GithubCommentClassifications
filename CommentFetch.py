@@ -9,7 +9,7 @@ load_dotenv()
 token = os.getenv("GITHUB_TOKEN")
 
 # Configure logging for detailed output
-# logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Check if the token is loaded
 if not token:
@@ -25,11 +25,52 @@ headers = {
     "Authorization": f"token {token}"
 }
 
+# Cache the contributors list
+contributors_cache = None
+
+# Function to fetch the list of contributors for caching
+def fetch_contributors(owner, repo):
+    global contributors_cache
+    url = f"https://api.github.com/repos/{owner}/{repo}/contributors"
+    try:
+        response = requests.get(url, headers=headers)
+        logging.debug("Fetching contributors list.")
+
+        if response.status_code != 200:
+            logging.error(f"Error fetching contributors: Received status code {response.status_code} with message: {response.text}")
+            contributors_cache = []
+            return
+
+        contributors = response.json()
+        # Cache the list of contributor usernames
+        contributors_cache = [contributor["login"] for contributor in contributors]
+        logging.info(f"Cached {len(contributors_cache)} contributors.")
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Request exception occurred while fetching contributors: {e}")
+        contributors_cache = []
+
+# Function to check if a user is a contributor to the repository
+def is_contributor(user):
+    # Return False if there was an issue fetching contributors
+    if contributors_cache is None:
+        fetch_contributors(owner, repo)
+
+    # Check if user is in the cached contributors list
+    if user in contributors_cache:
+        logging.debug(f"User {user} is a contributor.")
+        return True
+    else:
+        logging.debug(f"User {user} is not a contributor.")
+        return False
+
 # Function to fetch issue comments from a repo
 def fetch_issue_comments(owner, repo):
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
     comments = []
     page = 1
+
+    # Fetch and cache contributors before fetching comments
+    fetch_contributors(owner, repo)
 
     while True:
         try:
@@ -51,7 +92,8 @@ def fetch_issue_comments(owner, repo):
             for comment in data:
                 user = comment["user"]["login"]
                 is_owner = user == owner
-                is_contributor = check_if_contributor(owner, repo, user)
+                user_is_contributor = is_contributor(user)  # Use cached contributors
+
                 comments.append({
                     "id": comment["id"],
                     "issue_url": comment["issue_url"],
@@ -60,7 +102,7 @@ def fetch_issue_comments(owner, repo):
                     "body": comment["body"],
                     "user": user,
                     "is_owner": is_owner,
-                    "is_contributor": is_contributor
+                    "is_contributor": user_is_contributor
                 })
 
             logging.info(f"Fetched page {page} successfully.")
@@ -72,34 +114,14 @@ def fetch_issue_comments(owner, repo):
 
     return comments
 
-# Function to check if a user is a contributor to the repository
-def check_if_contributor(owner, repo, user):
-    url = f"https://api.github.com/repos/{owner}/{repo}/contributors"
-    try:
-        response = requests.get(url, headers=headers)
-        logging.debug("Fetching contributors list.")
-
-        if response.status_code != 200:
-            logging.error(f"Error fetching contributors: Received status code {response.status_code} with message: {response.text}")
-            return False
-
-        contributors = response.json()
-        for contributor in contributors:
-            if contributor["login"] == user:
-                logging.debug(f"User {user} is a contributor.")
-                return True
-
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Request exception occurred while fetching contributors: {e}")
-
-    logging.debug(f"User {user} is not a contributor.")
-    return False
-
-# Fetch comments and save them to a JSON file
+# Fetch comments and save them to a JSON file with the repository name in the filename
 comments = fetch_issue_comments(owner, repo)
 
 # Only save comments if they were fetched successfully
 if comments:
-    with open("github_comments.json", "w") as f:
+    filename = f"{repo}_github_comments.json"
+    with open(filename, "w") as f:
         json.dump(comments, f, indent=4)
-    logging.info("Comments saved to github_comments.json")
+    logging.info(f"Comments saved to {filename}")
+else:
+    logging.warning("No comments were fetched.")
