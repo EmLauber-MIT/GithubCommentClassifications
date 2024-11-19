@@ -18,7 +18,7 @@ if not token:
 
 # Define repository details
 owner = "fedidcg"
-repo = "Proposals"
+repo = "LightweightFedCM"
 
 # Define headers for authentication
 headers = {

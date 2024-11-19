@@ -4,7 +4,7 @@ import re
 
 # Load comments from JSON file
 print("Loading comments from JSON file...")
-REPO_NAME = "Proposals"
+REPO_NAME = "LightweightFedCM"
 json_file = f"{REPO_NAME}_github_comments.json"
 
 with open(json_file) as f:
@@ -69,7 +69,7 @@ for idx, comment in enumerate(comments, 1):
     comment["reason"] = reason_text
 
 # Save the modified comments back to JSON
-output_file = f"{REPO_NAME}_classified_comments.json"
+output_file = f"combined_classified_comments.json"
 print(f"\nSaving classified comments with reasons to {output_file}...")
 with open(output_file, "w") as f:
     json.dump(comments, f, indent=2)
