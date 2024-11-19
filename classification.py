@@ -1,4 +1,10 @@
 from langchain_ollama import OllamaLLM
+import json
+
+# load comments from json
+with open('LightweightFedCM_github_comments.json') as f:
+    comments = json.load(f)
+
 
 # prompt template
 def build_prompt(comment):

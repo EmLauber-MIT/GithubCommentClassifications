@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Comment Visualizations</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    canvas {
+      margin: 20px auto;
+      display: block;
+      max-width: 80%;
+    }
+    #repositorySelector {
+      margin: 20px auto;
+      display: block;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Dynamic Comment Visualizations</h1>
+  
+  <div id="repositorySelector">
+    <label for="repoDropdown">Select Repository:</label>
+    <select id="repoDropdown">
+      <!-- Options will be populated dynamically -->
+    </select>
+  </div>
+  
+  <h2>Classification Type Over Time</h2>
+  <canvas id="classificationOverTime"></canvas>
+  
+  <h2>Classification Type by User Role</h2>
+  <canvas id="classificationByUserRole"></canvas>
+  
+  <script>
+    // Real data (replace or dynamically load if needed)
+    const comments = [
+      {
+        "id": 1969302782,
+        "repository_id": "repo_1",
+        "created_at": "2024-02-28T16:01:48Z",
+        "classification": "Feature Request",
+        "is_owner": false,
+        "is_contributor": true
+      },
+      {
+        "id": 1969205691,
+        "repository_id": "repo_2",
+        "created_at": "2024-02-28T15:16:43Z",
+        "classification": "Technical Feedback",
+        "is_owner": true,
+        "is_contributor": false
+      },
+      {
+        "id": 2095746946,
+        "repository_id": "repo_1",
+        "created_at": "2024-02-29T13:45:20Z",
+        "classification": "Administrative",
+        "is_owner": false,
+        "is_contributor": true
+      }
+      // Add more comments here...
+    ];
+
+    // Get unique repository IDs
+    const repositoryIds = [...new Set(comments.map(comment => comment.repository_id))];
+
+    // Populate the dropdown
+    const repoDropdown = document.getElementById("repoDropdown");
+    repositoryIds.forEach(repoId => {
+      const option = document.createElement("option");
+      option.value = repoId;
+      option.textContent = `Repository: ${repoId}`;
+      repoDropdown.appendChild(option);
+    });
+
+    // Data processing functions
+    function groupByDate(filteredComments) {
+      const counts = {};
+      filteredComments.forEach(comment => {
+        const date = comment.created_at.split("T")[0]; // Extract date only
+        const classification = comment.classification;
+        if (!counts[date]) counts[date] = {};
+        counts[date][classification] = (counts[date][classification] || 0) + 1;
+      });
+      return counts;
+    }
+
+    function groupByUserRole(filteredComments) {
+      const counts = { owner: {}, contributor: {}, other: {} };
+      filteredComments.forEach(comment => {
+        const role = comment.is_owner ? "owner" : comment.is_contributor ? "contributor" : "other";
+        const classification = comment.classification;
+        if (!counts[role][classification]) counts[role][classification] = 0;
+        counts[role][classification] += 1;
+      });
+      return counts;
+    }
+
+    // Function to render charts
+    function renderCharts(filteredComments) {
+      // Prepare data for Classification Type Over Time
+      const groupedByDate = groupByDate(filteredComments);
+      const dates = Object.keys(groupedByDate);
+      const classifications = [...new Set(filteredComments.map(c => c.classification))];
+
+      const overTimeData = classifications.map(classification => ({
+        label: classification,
+        data: dates.map(date => groupedByDate[date][classification] || 0),
+        borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
+        fill: false
+      }));
+
+      // Prepare data for Classification Type by User Role
+      const groupedByRole = groupByUserRole(filteredComments);
+      const roles = ["owner", "contributor", "other"];
+
+      const byUserRoleData = classifications.map(classification => ({
+        label: classification,
+        data: roles.map(role => groupedByRole[role][classification] || 0),
+        backgroundColor: `hsl(${Math.random() * 360}, 70%, 50%)`
+      }));
+
+      // Clear existing charts
+      document.getElementById("classificationOverTime").remove();
+      document.getElementById("classificationByUserRole").remove();
+
+      const overTimeCanvas = document.createElement("canvas");
+      overTimeCanvas.id = "classificationOverTime";
+      document.body.insertBefore(overTimeCanvas, document.querySelector("h2"));
+
+      const byUserRoleCanvas = document.createElement("canvas");
+      byUserRoleCanvas.id = "classificationByUserRole";
+      document.body.appendChild(byUserRoleCanvas);
+
+      // Chart for Classification Type Over Time
+      new Chart(overTimeCanvas.getContext("2d"), {
+        type: "line",
+        data: {
+          labels: dates,
+          datasets: overTimeData
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: "Classification Type Over Time"
+            }
+          },
+          scales: {
+            x: { title: { display: true, text: "Date" } },
+            y: { title: { display: true, text: "Count" } }
+          }
+        }
+      });
+
+      // Chart for Classification Type by User Role
+      new Chart(byUserRoleCanvas.getContext("2d"), {
+        type: "bar",
+        data: {
+          labels: roles,
+          datasets: byUserRoleData
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: "Classification Type by User Role"
+            }
+          },
+          scales: {
+            x: { title: { display: true, text: "User Role" } },
+            y: { title: { display: true, text: "Count" } }
+          }
+        }
+      });
+    }
+
+    // Event listener for dropdown change
+    repoDropdown.addEventListener("change", (e) => {
+      const selectedRepo = e.target.value;
+      const filteredComments = comments.filter(comment => comment.repository_id === selectedRepo);
+      renderCharts(filteredComments);
+    });
+
+    // Initial render for the first repository
+    repoDropdown.value = repositoryIds[0];
+    renderCharts(comments.filter(comment => comment.repository_id === repositoryIds[0]));
+  </script>
+</body>
+</html>

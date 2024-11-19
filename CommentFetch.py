@@ -18,7 +18,7 @@ if not token:
 
 # Define repository details
 owner = "fedidcg"
-repo = "LightweightFedCM"
+repo = "Proposals"
 
 # Define headers for authentication
 headers = {
@@ -102,7 +102,8 @@ def fetch_issue_comments(owner, repo):
                     "body": comment["body"],
                     "user": user,
                     "is_owner": is_owner,
-                    "is_contributor": user_is_contributor
+                    "is_contributor": user_is_contributor,
+                    "repository_id": f"{owner}/{repo}"
                 })
 
             logging.info(f"Fetched page {page} successfully.")
