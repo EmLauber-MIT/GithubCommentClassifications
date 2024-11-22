@@ -17,8 +17,8 @@ if not token:
     exit(1)
 
 # Define repository details
-owner = "fedidcg"
-repo = "LightweightFedCM"
+owner = "w3c"
+repo = "long-animation-frames"
 
 # Define headers for authentication
 headers = {

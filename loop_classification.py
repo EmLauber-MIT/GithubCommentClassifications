@@ -4,7 +4,7 @@ import re
 
 # Load comments from JSON file
 print("Loading comments from JSON file...")
-REPO_NAME = "LightweightFedCM"
+REPO_NAME = "long-animation-frames"
 json_file = f"{REPO_NAME}_github_comments.json"
 
 with open(json_file) as f:
@@ -69,9 +69,22 @@ for idx, comment in enumerate(comments, 1):
     comment["reason"] = reason_text
 
 # Save the modified comments back to JSON
-output_file = f"combined_classified_comments.json"
+# Load existing classified comments if the file exists
+output_file = "combined_classified_comments.json"
+try:
+    with open(output_file, "r") as f:
+        existing_comments = json.load(f)
+    print(f"Loaded {len(existing_comments)} existing classified comments.")
+except FileNotFoundError:
+    existing_comments = []
+    print("No existing classified comments found. Creating a new file.")
+
+# Append new classified comments to the existing ones
+existing_comments.extend(comments)
 print(f"\nSaving classified comments with reasons to {output_file}...")
+
+# Save the updated list of comments
 with open(output_file, "w") as f:
-    json.dump(comments, f, indent=2)
+    json.dump(existing_comments, f, indent=2)
 
 print("Comments classified with reasons and saved successfully.")

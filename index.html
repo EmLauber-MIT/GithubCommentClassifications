@@ -37,7 +37,7 @@
   <script>
     fetch('Proposals_classified_comments.json')
       .then(response => response.json())
-      .then(comments => {
+      .then(comments => { 
         // Get unique repository IDs
         const repositoryIds = [...new Set(comments.map(comment => comment.repository_id))];
 
