@@ -137,9 +137,9 @@
         }
 
         function groupByUserRole(filteredComments) {
-          const counts = { owner: {}, contributor: {}, other: {} };
+          const counts = { contributor: {}, other: {} };
           filteredComments.forEach(comment => {
-            const role = comment.is_owner ? "owner" : comment.is_contributor ? "contributor" : "other";
+            const role = comment.is_contributor ? "contributor" : "other";
             const classification = comment.classification;
             counts[role][classification] = (counts[role][classification] || 0) + 1;
           });
@@ -172,7 +172,7 @@
           }));
 
           const groupedByRole = groupByUserRole(filteredComments);
-          const roles = ["owner", "contributor", "other"];
+          const roles = ["contributor", "other"];
           const byUserRoleData = classifications.map(classification => ({
             label: classification,
             data: roles.map(role => groupedByRole[role][classification] || 0),
