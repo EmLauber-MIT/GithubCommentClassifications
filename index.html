@@ -7,20 +7,84 @@
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    canvas {
-      margin: 20px auto;
-      display: block;
-      max-width: 80%;
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+      color: #333;
     }
-    #repositorySelector {
-      margin: 20px auto;
-      display: block;
+
+    h1, h2, h3 {
       text-align: center;
+    }
+
+    h1 {
+      margin-top: 20px;
+    }
+
+    h2, h3 {
+      margin: 40px auto 20px;
+    }
+
+    #repositorySelector {
+      display: flex;
+      justify-content: center;
+      margin: 20px auto;
+    }
+
+    label, select {
+      font-size: 1.2em;
+      margin-right: 10px;
+    }
+
+    .chart-container {
+      width: 90%;
+      max-width: 1000px;
+      margin: 20px auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    canvas {
+      max-width: 100%;
+      height: 400px;
+    }
+
+    #aboutSection {
+      width: 90%;
+      max-width: 800px;
+      margin: 40px auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #aboutSection a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    #aboutSection a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <h1>Dynamic Comment Visualizations</h1>
+  <h1>Analyzing Github Engagement via Issue Comment Classifications</h1>
+
+  <div id="aboutSection">
+    <h3>About This Project</h3>
+    <p>
+      This project visualizes GitHub issue comments to analyze engagement patterns and classify user contributions. The data-driven insights aim to improve collaboration on open-source projects. 
+    </p>
+    <p>
+      Check out the code on <a href="https://github.com/your-repo-link" target="_blank">GitHub</a>.
+    </p>
+  </div>
 
   <div id="repositorySelector">
     <label for="repoDropdown">Select Repository:</label>
@@ -29,11 +93,20 @@
     </select>
   </div>
 
-  <h2>Classification Type Over Time</h2>
-  <canvas id="classificationOverTime"></canvas>
+  <div class="chart-container">
+    <h2>Classification Type Over Time</h2>
+    <canvas id="classificationOverTime"></canvas>
+  </div>
 
-  <h2>Classification Type by User Role</h2>
-  <canvas id="classificationByUserRole"></canvas>
+  <div class="chart-container">
+    <h2>Classification Type by User Role</h2>
+    <canvas id="classificationByUserRole"></canvas>
+  </div>
+
+  <div class="chart-container">
+    <h2>Classification Percentages (Pie Chart)</h2>
+    <canvas id="classificationPieChart"></canvas>
+  </div>
 
   <script src="scripts.js"></script>
   <script>
@@ -41,8 +114,8 @@
       .then(response => response.json())
       .then(comments => {
         const repositoryIds = [...new Set(comments.map(comment => comment.repository_id))];
-
         const repoDropdown = document.getElementById("repoDropdown");
+
         repositoryIds.forEach(repoId => {
           const option = document.createElement("option");
           option.value = repoId;
@@ -50,9 +123,7 @@
           repoDropdown.appendChild(option);
         });
 
-        // Maintain chart instances for updating
-        let classificationOverTimeChart;
-        let classificationByUserRoleChart;
+        let classificationOverTimeChart, classificationByUserRoleChart, classificationPieChart;
 
         function groupByDate(filteredComments) {
           const counts = {};
@@ -75,6 +146,19 @@
           return counts;
         }
 
+        function calculatePercentages(filteredComments) {
+          const total = filteredComments.length;
+          const percentages = {};
+          filteredComments.forEach(comment => {
+            const classification = comment.classification;
+            percentages[classification] = (percentages[classification] || 0) + 1;
+          });
+          Object.keys(percentages).forEach(key => {
+            percentages[key] = (percentages[key] / total * 100).toFixed(2);
+          });
+          return percentages;
+        }
+
         function renderCharts(filteredComments) {
           const groupedByDate = groupByDate(filteredComments);
           const dates = Object.keys(groupedByDate);
@@ -95,7 +179,15 @@
             backgroundColor: `hsl(${classifications.indexOf(classification) * 60}, 70%, 50%)`
           }));
 
-          // Update or create the Classification Over Time chart
+          const percentages = calculatePercentages(filteredComments);
+          const pieData = {
+            labels: Object.keys(percentages),
+            datasets: [{
+              data: Object.values(percentages),
+              backgroundColor: Object.keys(percentages).map((_, i) => `hsl(${i * 60}, 70%, 50%)`)
+            }]
+          };
+
           if (classificationOverTimeChart) {
             classificationOverTimeChart.data.labels = dates;
             classificationOverTimeChart.data.datasets = overTimeData;
@@ -108,25 +200,11 @@
                 data: {
                   labels: dates,
                   datasets: overTimeData
-                },
-                options: {
-                  responsive: true,
-                  plugins: {
-                    title: {
-                      display: true,
-                      text: "Classification Type Over Time"
-                    }
-                  },
-                  scales: {
-                    x: { title: { display: true, text: "Date" } },
-                    y: { title: { display: true, text: "Count" } }
-                  }
                 }
               }
             );
           }
 
-          // Update or create the Classification by User Role chart
           if (classificationByUserRoleChart) {
             classificationByUserRoleChart.data.labels = roles;
             classificationByUserRoleChart.data.datasets = byUserRoleData;
@@ -139,20 +217,20 @@
                 data: {
                   labels: roles,
                   datasets: byUserRoleData
-                },
-                options: {
-                  responsive: true,
-                  plugins: {
-                    title: {
-                      display: true,
-                      text: "Classification Type by User Role"
-                    }
-                  },
-                  scales: {
-                    x: { title: { display: true, text: "User Role" } },
-                    y: { title: { display: true, text: "Count" } }
-                  }
                 }
+              }
+            );
+          }
+
+          if (classificationPieChart) {
+            classificationPieChart.data = pieData;
+            classificationPieChart.update();
+          } else {
+            classificationPieChart = new Chart(
+              document.getElementById("classificationPieChart").getContext("2d"),
+              {
+                type: "pie",
+                data: pieData
               }
             );
           }
@@ -164,7 +242,6 @@
           renderCharts(filteredComments);
         });
 
-        // Initial render for the first repository
         if (repositoryIds.length > 0) {
           repoDropdown.value = repositoryIds[0];
           renderCharts(comments.filter(comment => comment.repository_id === repositoryIds[0]));
