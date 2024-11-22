@@ -6,6 +6,7 @@
   <title>Dynamic Comment Visualizations</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -52,39 +53,98 @@
       max-width: 100%;
       height: 400px;
     }
+    #mainContainer {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      padding: 20px;
+    }
 
-    #aboutSection {
-      width: 90%;
-      max-width: 800px;
-      margin: 40px auto;
+    #aboutSection, #feedbackForm {
       background-color: white;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      flex: 1;
     }
 
-    #aboutSection a {
-      color: #007bff;
-      text-decoration: none;
+    #aboutSection {
+      max-width: 500px;
     }
 
-    #aboutSection a:hover {
-      text-decoration: underline;
+    #feedbackForm {
+      max-width: 500px;
+    }
+
+    label, input, textarea, button {
+      font-size: 1.2em;
+      margin-bottom: 15px;
+    }
+
+    input, textarea {
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      width: 100%;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1.1em;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    @media (max-width: 768px) {
+      #mainContainer {
+        flex-direction: column;
+      }
+
+      #aboutSection, #feedbackForm {
+        max-width: 100%;
+      }
     }
   </style>
 </head>
 <body>
   <h1>Analyzing Github Engagement via Issue Comment Classifications</h1>
 
-  <div id="aboutSection">
-    <h3>About This Project</h3>
-    <p>
-      This project visualizes GitHub issue comments to analyze engagement patterns and classify user contributions. The data-driven insights aim to improve collaboration on open-source projects. 
-    </p>
-    <p>
-      Check out the code on <a href="https://github.com/your-repo-link" target="_blank">GitHub</a>.
-    </p>
+  <div id="mainContainer">
+    <div id="aboutSection">
+      <h3>Interested in analyzing a repo?</h3>
+      <p>Submit the following information and the project creator will get back to you with an update.</p>
+    </div>
+
+    <div id="feedbackForm">
+      <h3>Submit Your Analysis Request</h3>
+      <form id="form">
+        <label for="repoUrl">GitHub Repo URL:</label>
+        <input type="url" id="repoUrl" required placeholder="Enter the GitHub repository URL">
+
+        <label for="contactEmail">Contact Email:</label>
+        <input type="email" id="contactEmail" required placeholder="Enter your email">
+
+        <label for="dateRequestedBy">Date Requested By:</label>
+        <input type="date" id="dateRequestedBy" required>
+
+        <label for="otherNotes">Other Notes:</label>
+        <textarea id="otherNotes" placeholder="Any additional information..."></textarea>
+
+        <button type="submit">Submit Request</button>
+      </form>
+    </div>
   </div>
+
+
 
   <div id="repositorySelector">
     <label for="repoDropdown">Select Repository:</label>
@@ -107,6 +167,7 @@
     <h2>Classification Percentages (Pie Chart)</h2>
     <canvas id="classificationPieChart"></canvas>
   </div>
+
 
   <script src="scripts.js"></script>
   <script>
@@ -249,5 +310,35 @@
       })
       .catch(error => console.error("Error loading comments:", error));
   </script>
+
+<script>
+  document.getElementById('form').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const formData = {
+      repoUrl: document.getElementById('repoUrl').value,
+      contactEmail: document.getElementById('contactEmail').value,
+      dateRequestedBy: document.getElementById('dateRequestedBy').value,
+      otherNotes: document.getElementById('otherNotes').value
+    };
+
+    fetch('/submit-analysis-request', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+      alert('Thank you for your request! We will get back to you soon.');
+      document.getElementById('form').reset(); // Reset form after submission
+    })
+    .catch(error => {
+      console.error('Error submitting form:', error);
+      alert('There was an error submitting your request. Please try again.');
+    });
+  });
+</script>
 </body>
 </html>
