@@ -5,7 +5,8 @@ import re
 # List of JSON files to be combined
 json_files = [
     "classified_comments_with_reasons.json",
-    "Proposals_classified_comments.json"
+    "GPC_classified_comments.json"
+    "GPV_classified_comments.json"
 ]
 
 # Load comments from JSON files
@@ -20,7 +21,7 @@ for json_file in json_files:
 print(f"Total comments loaded: {len(all_comments)}")
 
 # Save the modified comments back to a single JSON file
-output_file = "combined_classified_comments.json"
+output_file = "total_classified_comments.json"
 print(f"\nSaving classified comments with reasons to {output_file}...")
 with open(output_file, "w") as f:
     json.dump(all_comments, f, indent=2)

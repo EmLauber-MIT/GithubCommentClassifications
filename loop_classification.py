@@ -4,7 +4,7 @@ import re
 
 # Load comments from JSON file
 print("Loading comments from JSON file...")
-REPO_NAME = "long-animation-frames"
+REPO_NAME = "LightweightFedCM"
 json_file = f"{REPO_NAME}_github_comments.json"
 
 with open(json_file) as f:
