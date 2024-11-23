@@ -18,7 +18,7 @@ if not token:
 
 # Define repository details
 owner = "w3c"
-repo = "long-animation-frames"
+repo = "ai-web-impact"
 
 # Define headers for authentication
 headers = {
