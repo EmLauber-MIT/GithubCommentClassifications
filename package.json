@@ -1,5 +1,17 @@
 {
+  "name": "github-comment-classifications",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
-    "chart.js": "^4.4.6"
+    "body-parser": "^1.20.3",
+    "chart.js": "^4.4.6",
+    "express": "^4.21.1",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
   }
 }
